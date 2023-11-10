@@ -1,0 +1,256 @@
+#!/bin/bash
+
+CREATED_FILES=()
+CHANGED_FILES=()
+REMOVED_FILES=()
+
+IMAGE_STORAGE_ID=""
+CONTAINER_MOUNT_PATH=""
+DEST_DIR_TARBALL=$(mktemp -d --tmpdir=.)
+
+# Required commands for this tool
+REQUIRED_COMMANDS=(
+    "podman"
+    "diff"
+    "sed"
+    "awk"
+)
+
+DIFF_COMMAND="diff"
+DIFF_ARGS="-r"
+
+IGNORE_FILES_AND_PATHS=(
+    "/etc/fedora-release"
+    "/lib/fedora-release"
+    "/usr/lib/fedora-release"
+    "/etc/redhat-release"
+    "/etc/system-release"
+    "/root/.bash_history"
+    "/run/.containerenv"
+    "/run/secrets"
+    "/var/run/.containerenv"
+    "/var/run/secrets"
+)
+
+if_error_exit() {
+    local exit_code="$?"
+    if [ "${exit_code}" != "0" ]; then
+        RED="\033[91m"
+        ENDCOLOR="\033[0m"
+        echo -e "[ ${RED}FAILED${ENDCOLOR} ] ${1} with exit code: ${exit_code}"
+        kill $$ &> /dev/null
+    fi
+}
+
+# Function to check if commands exist
+function check_commands_exist() {
+    for cmd in "$@"; do
+        if ! command -v "$cmd" &> /dev/null; then
+            echo "Error: '$cmd' not found."
+            exit 1
+        fi
+    done
+}
+
+function print_ignore_message() {
+    if [ "${verbose_mode}" = "true" ]; then
+        echo "IGNORING ${1} as it's in the ignore list"
+    fi
+}
+
+# Function to display script usage
+function usage() {
+    echo "Usage: $0 --container-name <container-name> --image-name <image-name> [--verbose]"
+    echo
+    echo "Example"
+    echo
+    echo ${0} --image-name fedora --container-name fedora
+    exit 1
+}
+
+function extract_files_found() {
+    # Use awk to extract parts of the string and concatenate them with "/"
+    # Explanation:
+    # - awk: Extract the last field using '/' as the field separator and add a leading "/"
+    # - tr: Remove any remaining spaces
+    result=$(echo "$1" | awk -F'/merged/' '{split($2, parts, ":"); print "/" parts[1] "/" parts[2]}' | tr -d ' ')
+    if_error_exit "unable to extract files from the diff output"
+    echo "${result}"
+}
+
+# main()
+#
+# Call the function with the array of commands
+check_commands_exist "${REQUIRED_COMMANDS[@]}"
+
+# Parse command-line options
+verbose_mode=false
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+	--container-name)
+	    container_name="$2"
+	    shift
+	    ;;
+        --image-name)
+            image_name="$2"
+            shift
+            ;;
+        --verbose)
+            verbose_mode=true
+            ;;
+        *)
+            echo "Unknown option: $1"
+            usage
+            ;;
+    esac
+    shift
+done
+
+# Check if the image name is provided
+if [ -z "${container_name}" ]; then
+    echo "Error: Container name is required."
+    usage
+fi
+
+# Check if the image name is provided
+if [ -z "${image_name}" ]; then
+    echo "Error: Image name is required."
+    usage
+fi
+
+function detect_container_mount_path() {
+    CONTAINER_MOUNT_PATH=$(
+        podman \
+        container \
+        mount \
+	"${container_name}"
+    )
+    if_error_exit "unable to find container mount path"
+}
+
+function detect_container_storage_id() {
+    CONTAINER_STORAGE_ID=$(
+        echo "${CONTAINER_MOUNT_PATH}" | awk -F'/' '{print $(NF-1)}'
+    )
+    if_error_exit "unable to find container storage id"
+}
+
+function image_mount_path() {
+    IMAGE_MOUNT_PATH=$(
+        podman \
+        image \
+        mount \
+        "${image_name}"
+    )
+    if_error_exit "unable to execute podman image mount ${image_name}"
+}
+
+function image_storage_id() {
+    IMAGE_STORAGE_ID=$(echo "${IMAGE_MOUNT_PATH}" | awk -F'/' '{print $(NF-1)}' 2> /dev/null)
+    if_error_exit "unable to find image storage id"
+}
+
+function get_entry_from_container() {
+	container_name="${1}"
+	path_entry="${2}"
+
+	# using pause during the copy operation, ensuring consistency
+	$(podman cp --pause ${container_name}:${path_entry} ${DEST_DIR_TARBALL})
+}
+
+#function generate_tar_file() {
+#
+#}
+
+function print_summary() {
+    current_date=$(date +"%A, %B %d, %Y %T %Z")
+    echo -e "\nSummary"
+    echo "===================="
+    echo "$current_date"
+
+    echo -e "\nNew:"
+    echo -e "\t ${CREATED_FILES[*]}"
+
+    echo -e "\nChanged:"
+    echo -e "\t ${CHANGED_FILES[*]}"
+
+    echo -e "\nRemoved:"
+    echo -e "\t ${REMOVED_FILES[*]}"
+
+    echo
+}
+
+function main() {
+    image_mount_path
+    image_storage_id
+    detect_container_mount_path
+    detect_container_storage_id
+
+    if [ "${verbose_mode}" = "true" ]; then
+        echo "Container image: ${image_name}"
+        echo "Container mount path: ${CONTAINER_MOUNT_PATH}"
+
+        echo "Image storage id:" ${IMAGE_STORAGE_ID}
+        echo "Container storage id: ${CONTAINER_STORAGE_ID}"
+    fi
+
+    diff_output=$(
+        ${DIFF_COMMAND} \
+        ${DIFF_ARGS} \
+        "${CONTAINER_MOUNT_PATH}" \
+        "${IMAGE_MOUNT_PATH}" \
+        2> /dev/null
+    )
+
+    # Loop into the diff output
+    while IFS= read -r line; do
+	echo $line
+	if [[ "$line" == *"Only in"* && "$line" == *${IMAGE_STORAGE_ID}* ]]; then
+            removed_file_found=$(extract_files_found "${line}")
+            if [[ "${IGNORE_FILES_AND_PATHS[@]/$removed_file_found}" != "${IGNORE_FILES_AND_PATHS[@]}" ]]; then
+                print_ignore_message "${removed_file_found}"
+                continue
+            fi
+
+	    REMOVED_FILES+=("$removed_file_found")
+            if [ "${verbose_mode}" = "true" ]; then
+                echo "Found REMOVED file:" ${removed_file_found}
+            fi
+
+        elif [[ "$line" == *"Only in"* && "$line" == *"${CONTAINER_IMAGE_STORAGE_ID}"* ]]; then
+            new_file_found=$(extract_files_found "${line}")
+            if [[ "${IGNORE_FILES_AND_PATHS[@]/$new_file_found}" != "${IGNORE_FILES_AND_PATHS[@]}" ]]; then
+                print_ignore_message "${new_file_found}"
+                continue
+            fi
+
+	    CREATED_FILES+=("$new_file_found")
+            if [ "${verbose_mode}" = "true" ]; then
+                echo "Found NEW file:" ${new_file_found}
+	    fi
+
+	    echo "Dougllll"
+	    echo "${container_name}"
+	    echo "${new_file_found}"
+	    get_entry_from_container "${container_name}" "${new_file_found}"
+
+        elif [[ "${line}" == *"${DIFF_COMMAND} ${DIFF_ARGS}"* ]]; then
+            changed_file_found=$(echo "$line" | awk -F'/merged' '{print $2}' | cut -d ' ' -f1 )
+            if [[ "${IGNORE_FILES_AND_PATHS[@]/$changed_file_found}" != "${IGNORE_FILES_AND_PATHS[@]}" ]]; then
+                print_ignore_message "${changed_file_found}"
+                continue
+            fi
+
+            CHANGED_FILES+=("$changed_file_found")
+            if [ "${verbose_mode}" = "true" ]; then
+                echo "Found CHANGED file:" ${changed_file_found}
+	    fi
+        fi
+    done < <(echo "${diff_output}")
+
+    print_summary
+}
+
+# Call the main function
+main
