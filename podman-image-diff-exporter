@@ -230,9 +230,6 @@ function main() {
                 echo "Found NEW file:" ${new_file_found}
 	    fi
 
-	    echo "Dougllll"
-	    echo "${container_name}"
-	    echo "${new_file_found}"
 	    get_entry_from_container "${container_name}" "${new_file_found}"
 
         elif [[ "${line}" == *"${DIFF_COMMAND} ${DIFF_ARGS}"* ]]; then
