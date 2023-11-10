@@ -6,7 +6,6 @@ REMOVED_FILES=()
 
 IMAGE_STORAGE_ID=""
 CONTAINER_MOUNT_PATH=""
-DEST_DIR_TARBALL=$(mktemp -d --tmpdir=.)
 
 # Required commands for this tool
 REQUIRED_COMMANDS=(
@@ -202,6 +201,8 @@ function main() {
         "${IMAGE_MOUNT_PATH}" \
         2> /dev/null
     )
+
+    DEST_DIR_TARBALL=$(mktemp -d --tmpdir=.)
 
     # Loop into the diff output
     while IFS= read -r line; do
