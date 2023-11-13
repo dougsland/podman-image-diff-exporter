@@ -13,6 +13,7 @@ REQUIRED_COMMANDS=(
     "diff"
     "sed"
     "awk"
+    "stat"
 )
 
 DIFF_COMMAND="diff"
@@ -154,8 +155,10 @@ function get_entry_from_container() {
 	container_name="${1}"
 	path_entry="${2}"
 
+	dir_name=$(dirname ${path_entry})
+	mkdir -p "${DEST_DIR_TARBALL}/${dir_name}"
 	# using pause during the copy operation, ensuring consistency
-	$(podman cp --pause ${container_name}:${path_entry} ${DEST_DIR_TARBALL})
+	$(podman cp --pause ${container_name}:${path_entry} ${DEST_DIR_TARBALL}/$dir_name)
 }
 
 #function generate_tar_file() {
@@ -178,6 +181,42 @@ function print_summary() {
     echo -e "\t ${REMOVED_FILES[*]}"
 
     echo
+}
+
+generate_metadata() {
+    OUTPUT_FILE="$1/metadata.json"
+
+    echo "{" > "$OUTPUT_FILE"
+
+    for filename in $(find $1 -type f); do
+	if [ "$filename" = "$1/metadata.json" ]; then
+		continue
+	fi
+
+        if [ -f "$filename" ]; then
+            size=$(stat -c%s "$filename")
+            last_modified=$(stat -c%z "$filename")
+            sha256sum=$(sha256sum "$filename" | awk '{print $1}')
+            perm=$(stat -c%a "$filename" | awk '{print $1}')
+            destdir=$(echo "$filename" | awk -F'/' '{print $3}')
+
+	    echo "\"$filename\": {" \
+                 "\"size\": $size," \
+                 "\"last_modified\": $last_modified," \
+                 "\"sha256sum\": \"$sha256sum\"," \
+                 "\"destdir\": \"/$destdir\"," \
+                 "\"permission:\": $perm" \
+            "}," >> "$OUTPUT_FILE"
+
+        fi
+    done
+
+    # Remove trailing comma
+    sed -i '$ s/,$//' "$OUTPUT_FILE"
+
+    echo "}" >> "$OUTPUT_FILE"
+
+    echo "Metadata file created: $OUTPUT_FILE"
 }
 
 function main() {
@@ -244,9 +283,13 @@ function main() {
             if [ "${verbose_mode}" = "true" ]; then
                 echo "Found CHANGED file:" ${changed_file_found}
 	    fi
+
+	    get_entry_from_container "${container_name}" "${changed_file_found}"
         fi
     done < <(echo "${diff_output}")
 
+    generate_metadata "${DEST_DIR_TARBALL}"
+    $(tar -cvzf foo.tar.gz "${DEST_DIR_TARBALL}")
     print_summary
 }
 
