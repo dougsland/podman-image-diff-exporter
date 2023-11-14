@@ -161,9 +161,11 @@ function get_entry_from_container() {
 	$(podman cp --pause ${container_name}:${path_entry} ${DEST_DIR_TARBALL}/$dir_name)
 }
 
-#function generate_tar_file() {
-#
-#}
+function generate_tar_file() {
+    current_date=$(date +"%Y-%m-%d-%H%M%S")
+    str_export="$current_date-exported-container-$2-image-$3"
+    $(tar -cvzf "${str_export}.tar.gz" "$1" 1> /dev/null)
+}
 
 function print_summary() {
     current_date=$(date +"%A, %B %d, %Y %T %Z")
@@ -213,10 +215,11 @@ generate_metadata() {
 
     # Remove trailing comma
     sed -i '$ s/,$//' "$OUTPUT_FILE"
-
     echo "}" >> "$OUTPUT_FILE"
 
-    echo "Metadata file created: $OUTPUT_FILE"
+    if [ "${verbose_mode}" = "true" ]; then
+        echo "Metadata file created: $OUTPUT_FILE"
+    fi
 }
 
 function main() {
@@ -289,7 +292,10 @@ function main() {
     done < <(echo "${diff_output}")
 
     generate_metadata "${DEST_DIR_TARBALL}"
-    $(tar -cvzf foo.tar.gz "${DEST_DIR_TARBALL}")
+    $(print_summary 1> "${DEST_DIR_TARBALL}"/summary)
+
+    generate_tar_file "${DEST_DIR_TARBALL}" "${container_name}" "${image_name}"
+
     print_summary
 }
 
