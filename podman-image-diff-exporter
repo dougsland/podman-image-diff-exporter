@@ -197,17 +197,15 @@ generate_metadata() {
 
         if [ -f "$filename" ]; then
             size=$(stat -c%s "$filename")
-            last_modified=$(stat -c%z "$filename")
             sha256sum=$(sha256sum "$filename" | awk '{print $1}')
             perm=$(stat -c%a "$filename" | awk '{print $1}')
             destdir=$(echo "$filename" | awk -F'/' '{print $3}')
 
 	    echo "\"$filename\": {" \
                  "\"size\": $size," \
-                 "\"last_modified\": $last_modified," \
                  "\"sha256sum\": \"$sha256sum\"," \
                  "\"destdir\": \"/$destdir\"," \
-                 "\"permission:\": $perm" \
+                 "\"permission\": $perm" \
             "}," >> "$OUTPUT_FILE"
 
         fi
@@ -220,6 +218,26 @@ generate_metadata() {
     if [ "${verbose_mode}" = "true" ]; then
         echo "Metadata file created: $OUTPUT_FILE"
     fi
+}
+
+function tool_to_import_files() {
+    INPUT_FILE="metadata.json"
+
+    metadata=$(cat $INPUT_FILE)
+
+    while IFS=: read -r filename info; do
+        size=$(echo $info | jq -r .size)
+        sha=$(echo $info | jq -r .sha256sum)
+        destdir=$(echo $info | jq -r .destdir)
+        permission=$(echo $info | jq -r .permission)
+
+        echo "File:" $(basename $filename)
+        echo "  Size: $size bytes"
+        echo "  sha256sum: $sha"
+        echo "  destdir: $destdir"
+        echo "  permission: $permission"
+        echo
+    done < <(echo $metadata | jq -r "to_entries|map(\"\(.key):\(.value)\")|.[]")
 }
 
 function main() {
@@ -248,7 +266,6 @@ function main() {
 
     # Loop into the diff output
     while IFS= read -r line; do
-	echo $line
 	if [[ "$line" == *"Only in"* && "$line" == *${IMAGE_STORAGE_ID}* ]]; then
             removed_file_found=$(extract_files_found "${line}")
             if [[ "${IGNORE_FILES_AND_PATHS[@]/$removed_file_found}" != "${IGNORE_FILES_AND_PATHS[@]}" ]]; then
@@ -293,7 +310,7 @@ function main() {
 
     generate_metadata "${DEST_DIR_TARBALL}"
     $(print_summary 1> "${DEST_DIR_TARBALL}"/summary)
-
+    #$(tool_to_import_files 1> 
     generate_tar_file "${DEST_DIR_TARBALL}" "${container_name}" "${image_name}"
 
     rm -rf "${DEST_DIR_TARBALL}"
