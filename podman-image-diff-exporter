@@ -296,6 +296,7 @@ function main() {
 
     generate_tar_file "${DEST_DIR_TARBALL}" "${container_name}" "${image_name}"
 
+    rm -rf "${DEST_DIR_TARBALL}"
     print_summary
 }
 
