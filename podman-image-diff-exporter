@@ -164,6 +164,7 @@ function get_entry_from_container() {
 function generate_tar_file() {
     current_date=$(date +"%Y-%m-%d-%H%M%S")
     str_export="$current_date-exported-container-$2-image-$3"
+    echo -e "Generated ${str_export}.tar.gz\n"
     $(tar -cvzf "${str_export}.tar.gz" "$1" 1> /dev/null)
 }
 
@@ -315,10 +316,11 @@ function main() {
     $(print_summary 1> "${DEST_DIR_TARBALL}"/summary)
     tool_to_import_files 1> "${DEST_DIR_TARBALL}"/import_files_to_container
     chmod +x "${DEST_DIR_TARBALL}"/import_files_to_container
-    generate_tar_file "${DEST_DIR_TARBALL}" "${container_name}" "${image_name}"
 
-    rm -rf "${DEST_DIR_TARBALL}"
     print_summary
+
+    generate_tar_file "${DEST_DIR_TARBALL}" "${container_name}" "${image_name}"
+    rm -rf "${DEST_DIR_TARBALL}"
 }
 
 # Call the main function
