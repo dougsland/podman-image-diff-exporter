@@ -6,5 +6,33 @@ Consider this scenario: your vehicle is currently operating on version 1 of a co
 
 Example, generating the .tar.gz:
 ```
-./podman-image-diff-exporter --image-name fedora --verbose --container-name fedora
+# ./podman-image-diff-exporter --image-name fedora --container-name myfedora
+
+Summary
+====================
+Tuesday, November 14, 2023 17:31:25 EST
+
+New:
+	 /etc/auto-rhivos /etc/cow-team
+
+Changed:
+	 /etc/libaudit.conf
+
+Removed:
+	 /etc/localtime
+
+Generated 2023-11-14-173125-exported-container-fedora-image-myfedora.tar.gz
+```
+
+**Output tarball**
+```
+# tar zxvf 2023-11-14-173125-exported-container-fedora-image-fedora.tar.gz
+./tmp.XMTiZFD8q3/
+./tmp.XMTiZFD8q3/etc/
+./tmp.XMTiZFD8q3/etc/auto-rhivos
+./tmp.XMTiZFD8q3/etc/cow-team
+./tmp.XMTiZFD8q3/etc/libaudit.conf
+./tmp.XMTiZFD8q3/metadata.json
+./tmp.XMTiZFD8q3/summary
+./tmp.XMTiZFD8q3/import_files_to_container
 ```
