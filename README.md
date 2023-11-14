@@ -26,7 +26,7 @@ Generated 2023-11-14-173125-exported-container-fedora-image-myfedora.tar.gz
 
 **Output tarball**
 ```
-# tar zxvf 2023-11-14-173125-exported-container-fedora-image-fedora.tar.gz
+# tar zxvf 2023-11-14-173125-exported-container-fedora-image-myfedora.tar.gz
 ./tmp.XMTiZFD8q3/
 ./tmp.XMTiZFD8q3/etc/
 ./tmp.XMTiZFD8q3/etc/auto-rhivos
@@ -36,3 +36,13 @@ Generated 2023-11-14-173125-exported-container-fedora-image-myfedora.tar.gz
 ./tmp.XMTiZFD8q3/summary
 ./tmp.XMTiZFD8q3/import_files_to_container
 ```
+
+**About the tarball**
+File                      | Description
+------------------------- | -------------
+metadata.json             | Metadata file
+import_files_to_container | Tool to import files from .tar.gz to container
+summary                   | Summary of the tool
+/etc/auto-rhivos          | New file detected
+/etc/cow-team             | New file detected
+/etc/libaudit.conf        | File changed detected
