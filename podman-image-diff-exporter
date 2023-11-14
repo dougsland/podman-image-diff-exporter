@@ -221,6 +221,8 @@ generate_metadata() {
 }
 
 function tool_to_import_files() {
+    cat <<'EOF'
+#!/bin/bash
     INPUT_FILE="metadata.json"
 
     metadata=$(cat $INPUT_FILE)
@@ -238,6 +240,7 @@ function tool_to_import_files() {
         echo "  permission: $permission"
         echo
     done < <(echo $metadata | jq -r "to_entries|map(\"\(.key):\(.value)\")|.[]")
+EOF
 }
 
 function main() {
@@ -310,7 +313,8 @@ function main() {
 
     generate_metadata "${DEST_DIR_TARBALL}"
     $(print_summary 1> "${DEST_DIR_TARBALL}"/summary)
-    #$(tool_to_import_files 1> 
+    tool_to_import_files 1> "${DEST_DIR_TARBALL}"/import_files_to_container
+    chmod +x "${DEST_DIR_TARBALL}"/import_files_to_container
     generate_tar_file "${DEST_DIR_TARBALL}" "${container_name}" "${image_name}"
 
     rm -rf "${DEST_DIR_TARBALL}"
