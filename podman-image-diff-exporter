@@ -20,6 +20,11 @@ DIFF_COMMAND="diff"
 DIFF_ARGS="-r"
 
 IGNORE_FILES_AND_PATHS=(
+    "/etc/fedora-release"
+    "/lib/fedora-release"
+    "/usr/lib/fedora-release"
+    "/etc/redhat-release"
+    "/etc/system-release"
     "/root/.bash_history"
     "/run/.containerenv"
     "/run/secrets"
