@@ -24,7 +24,7 @@ Removed:
 Generated 2023-11-14-173125-exported-container-fedora-image-myfedora.tar.gz
 ```
 
-**Output tarball**
+## Output tarball
 ```
 # tar zxvf 2023-11-14-173125-exported-container-fedora-image-myfedora.tar.gz
 ./tmp.XMTiZFD8q3/
@@ -37,7 +37,8 @@ Generated 2023-11-14-173125-exported-container-fedora-image-myfedora.tar.gz
 ./tmp.XMTiZFD8q3/import_files_to_container
 ```
 
-**About the tarball**
+## About the tarball
+
 File                      | Description
 ------------------------- | -------------
 metadata.json             | Metadata file
@@ -47,7 +48,7 @@ summary                   | Summary of the tool
 /etc/cow-team             | New file detected
 /etc/libaudit.conf        | File changed detected
 
-**Metadata format and fields**
+## Metadata format and fields**
 
 Example of metadata json:
 ```
@@ -58,7 +59,7 @@ Example of metadata json:
 }
 ```
 
-**Description of the metadata json
+## Description of the metadata json
 
 Each entry begins with the path of the file, copied from the original container, and is followed by fields that provide descriptions of the file.
 
