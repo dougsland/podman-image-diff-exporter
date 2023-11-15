@@ -46,3 +46,25 @@ summary                   | Summary of the tool
 /etc/auto-rhivos          | New file detected
 /etc/cow-team             | New file detected
 /etc/libaudit.conf        | File changed detected
+
+**Metadata format and fields**
+
+Example of metadata json:
+```
+{
+"./tmp.XMTiZFD8q3/etc/auto-rhivos": { "size": 0, "sha256sum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "destdir": "/etc", "permission": 644 },
+"./tmp.XMTiZFD8q3/etc/cow-team": { "size": 0, "sha256sum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "destdir": "/etc", "permission": 644 },
+"./tmp.XMTiZFD8q3/etc/libaudit.conf": { "size": 201, "sha256sum": "8887c253c82da4a2a81520ace9f2dce1cd0626320d49800e106a5b5719b68817", "destdir": "/etc", "permission": 640 }
+}
+```
+
+**Description of the metadata json
+
+Each entry begins with the path of the file, copied from the original container, and is followed by fields that provide descriptions of the file.
+
+Fields     | Description
+--------   | ----------------
+size       | Size of the file
+sha256sum  | sha256sum digest
+destdir    | The destiny dir for the file
+permission | octal permission
