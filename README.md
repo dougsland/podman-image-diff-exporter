@@ -69,3 +69,35 @@ size       | Size of the file
 sha256sum  | sha256sum digest
 destdir    | The destiny dir for the file
 permission | octal permission
+
+## Importing the files to a container
+```
+# tar zxvf 2023-11-15-103628-exported-container-fedora-image-fedora.tar.gz
+./tmp.b5wcpmDM5j/
+./tmp.b5wcpmDM5j/etc/
+./tmp.b5wcpmDM5j/etc/auto-rhivos
+./tmp.b5wcpmDM5j/etc/cow-team
+./tmp.b5wcpmDM5j/etc/libaudit.conf
+./tmp.b5wcpmDM5j/metadata.json
+./tmp.b5wcpmDM5j/summary
+./tmp.b5wcpmDM5j/import_files_to_container
+
+# ./import_files_to_container -c myfedora40
+File: auto-rhivos
+  Size: 0 bytes
+  sha256sum: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  destdir: /etc
+  permission: 644
+
+File: cow-team
+  Size: 0 bytes
+  sha256sum: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  destdir: /etc
+  permission: 644
+
+File: libaudit.conf
+  Size: 201 bytes
+  sha256sum: 8887c253c82da4a2a81520ace9f2dce1cd0626320d49800e106a5b5719b68817
+  destdir: /etc
+  permission: 640
+```
