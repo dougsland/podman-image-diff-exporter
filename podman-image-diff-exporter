@@ -223,7 +223,43 @@ generate_metadata() {
 
 function tool_to_import_files() {
     cat <<'EOF'
-#!/bin/bash
+    #!/bin/bash
+
+    usage() {
+        echo "Usage: $0 -c <container_name>"
+        exit 1
+    }
+
+    # Parse command line options
+    options=$(getopt -o c: --long container: -n "$0" -- "$@")
+    eval set -- "$options"
+
+    # Initialize variables
+    container_name=""
+
+    # Process options
+    while true; do
+        case "$1" in
+            -c | --container)
+            container_name="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            usage
+            ;;
+        esac
+    done
+
+    # Check if required options are provided
+    if [ -z "$container_name" ]; then
+        echo "Error: Container name is required."
+        usage
+    fi
+
     INPUT_FILE="metadata.json"
 
     metadata=$(cat $INPUT_FILE)
@@ -240,6 +276,9 @@ function tool_to_import_files() {
         echo "  destdir: $destdir"
         echo "  permission: $permission"
         echo
+
+        podman cp ./${destdir}/$(basename $filename) ${container_name}:${destdir}
+
     done < <(echo $metadata | jq -r "to_entries|map(\"\(.key):\(.value)\")|.[]")
 EOF
 }
