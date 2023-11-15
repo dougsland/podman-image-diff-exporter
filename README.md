@@ -13,7 +13,7 @@ Summary
 Tuesday, November 14, 2023 17:31:25 EST
 
 New:
-	 /etc/auto-rhivos /etc/cow-team
+	 /etc/auto-rhivos
 
 Changed:
 	 /etc/libaudit.conf
@@ -30,7 +30,6 @@ Generated 2023-11-14-173125-exported-container-fedora-image-myfedora.tar.gz
 ./tmp.XMTiZFD8q3/
 ./tmp.XMTiZFD8q3/etc/
 ./tmp.XMTiZFD8q3/etc/auto-rhivos
-./tmp.XMTiZFD8q3/etc/cow-team
 ./tmp.XMTiZFD8q3/etc/libaudit.conf
 ./tmp.XMTiZFD8q3/metadata.json
 ./tmp.XMTiZFD8q3/summary
@@ -45,7 +44,6 @@ metadata.json             | Metadata file
 import_files_to_container | Tool to import files from .tar.gz to container
 summary                   | Summary of the tool
 /etc/auto-rhivos          | New file detected
-/etc/cow-team             | New file detected
 /etc/libaudit.conf        | File changed detected
 
 ## Metadata format and fields
@@ -54,7 +52,6 @@ Example of metadata json:
 ```
 {
 "./tmp.XMTiZFD8q3/etc/auto-rhivos": { "size": 0, "sha256sum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "destdir": "/etc", "permission": 644 },
-"./tmp.XMTiZFD8q3/etc/cow-team": { "size": 0, "sha256sum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "destdir": "/etc", "permission": 644 },
 "./tmp.XMTiZFD8q3/etc/libaudit.conf": { "size": 201, "sha256sum": "8887c253c82da4a2a81520ace9f2dce1cd0626320d49800e106a5b5719b68817", "destdir": "/etc", "permission": 640 }
 }
 ```
@@ -76,7 +73,6 @@ permission | octal permission
 ./tmp.b5wcpmDM5j/
 ./tmp.b5wcpmDM5j/etc/
 ./tmp.b5wcpmDM5j/etc/auto-rhivos
-./tmp.b5wcpmDM5j/etc/cow-team
 ./tmp.b5wcpmDM5j/etc/libaudit.conf
 ./tmp.b5wcpmDM5j/metadata.json
 ./tmp.b5wcpmDM5j/summary
@@ -89,15 +85,18 @@ File: auto-rhivos
   destdir: /etc
   permission: 644
 
-File: cow-team
-  Size: 0 bytes
-  sha256sum: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-  destdir: /etc
-  permission: 644
-
 File: libaudit.conf
   Size: 201 bytes
   sha256sum: 8887c253c82da4a2a81520ace9f2dce1cd0626320d49800e106a5b5719b68817
   destdir: /etc
   permission: 640
+
+# podman exec myfedora40 ls /etc/auto-rhivos
+/etc/auto-rhivos
+
+# podman exec myfedora40 sha256sum /etc/auto-rhivos
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /etc/auto-rhivos
+
+# podman exec myfedora40 sha256sum /etc/libaudit.conf
+8887c253c82da4a2a81520ace9f2dce1cd0626320d49800e106a5b5719b68817  /etc/libaudit.conf
 ```
