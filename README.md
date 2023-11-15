@@ -6,7 +6,7 @@ Consider this scenario: your vehicle is currently operating on version 1 of a co
 
 Example, generating the .tar.gz:
 ```
-# ./podman-image-diff-exporter --image-name fedora --container-name myfedora
+# ./podman-image-diff-exporter --image-name fedora39 --container-name myfedora
 
 Summary
 ====================
